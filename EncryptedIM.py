@@ -15,7 +15,7 @@ import os
 
 
 HOST = ""
-PORT = 1992
+PORT = 8889
 
 SIG_SIZE = hashlib.sha1().digest_size
 mode = AES.MODE_CBC
@@ -48,6 +48,29 @@ kOne = "temptemptemptemp"
 kOne = (hashlib.sha1(kOne).digest())[:16]
 
 
+#def exponent(g, x):
+#	print g
+#	if x == 0:
+#		return 1
+#	elif x % 2 == 1:
+#		return g * exponent(g, x - 1)
+#	else:
+#		num = exponent(g, x / 2)
+#		return num * num
+
+def exponent(g, x):
+    r = 1
+    while 1:
+        if x % 2 == 1:
+            r *= g
+        x /= 2
+        if x == 0:
+            break
+        g *= g
+
+    return r
+
+
 #server
 if (flag == "-s"):
 
@@ -67,16 +90,24 @@ if (flag == "-s"):
 	possible_sockets = [sys.stdin, sock, conn]
 	#print ("Server is connected to the client and running on port " + str(PORT) + ".")
 
-	#receive B
-	#B = s.recv(4096)
-
+	#receive B and remove newline from the end since that is not to be included
+	B = conn.recv(4096).rstrip('\n')
 
 	#compute and send A
+	a = os.urandom(2).encode('hex')
+	print a
+	A = exponent(baseG, int(a, 16)) % int(primeP)
+
+	conn.send(str(A) + '\n')
 
 
 	#compute shared key using A and B with p and g
+	s = exponent(int(B), int(a, 16)) % int(primeP)
+	print (s)
 
+	key = (hashlib.sha1(str(s)).digest())[:16]
 
+	print key
 
 	while True:
 
@@ -103,7 +134,7 @@ if (flag == "-s"):
 						iv = data[:16]
 
 						#decrypt ciphertext with AES128 using the key and the IV sent over
-						decryptor = AES.new(kOne, mode, iv)
+						decryptor = AES.new(key, mode, iv)
 						plain = decryptor.decrypt(data[16:])
 
 						#strip any padding added to the message and add a newline so that it prints. Print the message
@@ -128,7 +159,7 @@ if (flag == "-s"):
 							toClient += ' ' * (16 - len(toClient) % 16)
 
 						#encrypt using AES128 with the key from the user
-						encryptor = AES.new(kOne, mode, iv)
+						encryptor = AES.new(key, mode, iv)
 						ciphertext = encryptor.encrypt(toClient)
 
 						#send the IV, ciphertext, and signiture in a nice little package 
@@ -156,15 +187,6 @@ elif (flag == "-c"):
 
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-	#compute B and send B
-
-
-	#receive A
-
-
-	#compute secret key
-
-
 
 	possible_sockets = [sys.stdin, sock]
 
@@ -180,6 +202,22 @@ elif (flag == "-c"):
 
 	#print "Connected to " + str(hostname) + " on port " + str(PORT) + "."
 
+	#compute B and send B
+	#b should be a cryptographically random number
+	b = os.urandom(2).encode('hex')
+	print (b)
+	B = exponent(baseG, int(b, 16)) % int(primeP)
+	sock.send(str(B) + '\n')
+
+	#receive A and remove newline
+	A = sock.recv(4096).rstrip('\n')
+
+	#compute secret key
+	s = exponent(int(A), int(b, 16)) % int(primeP)
+	print (s)
+
+	key = (hashlib.sha1(str(s)).digest())[:16]
+	print key
 
 	while True:
 		read, write, err = select.select(possible_sockets, [], [], 1)
@@ -199,7 +237,7 @@ elif (flag == "-c"):
 					iv = data[:16]
 
 					#decrypt the ciphertext with confkey, IV in AES 128 mode
-					decryptor = AES.new(kOne, mode, iv)
+					decryptor = AES.new(key, mode, iv)
 					plain = decryptor.decrypt(data[16:])
 					
 					#strip any whitespace and add a newline. Print the message.
@@ -224,8 +262,8 @@ elif (flag == "-c"):
 				elif len(toServer) % 16 != 0:
 					toServer += ' ' * (16 - len(toServer) % 16)
 
-				#encrypt it with the IV and confkey(kOne)
-				encryptor = AES.new(kOne, mode, iv)
+				#encrypt it with the IV and confkey(key)
+				encryptor = AES.new(key, mode, iv)
 				ciphertext = encryptor.encrypt(toServer)
 				
 
@@ -240,3 +278,5 @@ elif (flag == "-c"):
 else:
 	print ("Flag is not valid. '-s' or '-c' should be used.")
 	sys.exit()
+
+
