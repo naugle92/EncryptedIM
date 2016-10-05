@@ -45,6 +45,7 @@ parser.add_argument('-s', dest='server', action='store_true',
 args = parser.parse_args()
 
 kOne = "temptemptemptemp"
+kOne = (hashlib.sha1(kOne).digest())[:16]
 
 
 #server
@@ -65,6 +66,17 @@ if (flag == "-s"):
 	conn, addr = sock.accept()
 	possible_sockets = [sys.stdin, sock, conn]
 	#print ("Server is connected to the client and running on port " + str(PORT) + ".")
+
+	#receive B
+	#B = s.recv(4096)
+
+
+	#compute and send A
+
+
+	#compute shared key using A and B with p and g
+
+
 
 	while True:
 
@@ -143,6 +155,15 @@ elif (flag == "-c"):
 	hostname = args.connect
 
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+	#compute B and send B
+
+
+	#receive A
+
+
+	#compute secret key
+
 
 
 	possible_sockets = [sys.stdin, sock]
