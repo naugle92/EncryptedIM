@@ -21,14 +21,14 @@ SIG_SIZE = hashlib.sha1().digest_size
 mode = AES.MODE_CBC
 
 
-baseG = 5
+baseG = 2
 primeP = 0x00cc81ea8157352a9e9a318aac4e33ffba80fc8da3373fb44895109e4c3ff6cedcc55c02228fccbd551a504feb4346d2aef47053311ceaba95f6c540b967b9409e9f0502e598cfc71327c5a455e2e807bede1e0b7d23fbea054b951ca964eaecae7ba842ba1fc6818c453bf19eb9c5c86e723e69a210d4b72561cab97b3fb3060b
 
 
 total = len(sys.argv)
 
 #cancel everything if there are not exactly 3 arguments
-if (total != 7) and (total != 6):
+if (total != 2) and (total != 3):
 	print("6 or 7 arguments needed. Should be 'python UnencryptedIM.py -s|-c <name>'")
 	sys.exit()
 
@@ -40,21 +40,11 @@ parser.add_argument('-c', dest='connect', metavar='HOSTNAME', type=str,
 	help = 'Host to connect to')
 parser.add_argument('-s', dest='server', action='store_true',
 	help = 'Run as server (on port 9999)')
-parser.add_argument('-confkey', dest='confkey', metavar='CONFKEY', type=str,
-	help = 'Confidentiality key. The key used to hash the messages.')
-parser.add_argument('-authkey', dest='authkey', metavar='AUTHKEY', type=str,
-	help = 'Authorization key. The key used to verify the identity of the sender')
 
 
 args = parser.parse_args()
 
-#confkey = args.confkey
-#authkey = args.authkey
-
-
-#hash the keys and take the first 16 bytes (128 bits) so that are the correct length
-kOne = (hashlib.sha1(args.confkey).digest())[:16]
-kTwo = (hashlib.sha1(args.authkey).digest())[:16]
+kOne = "temptemptemptemp"
 
 
 #server
@@ -95,14 +85,7 @@ if (flag == "-s"):
 					#if there is a message, print that bitch out
 					if fromClient:
 						#data = IV + ciphertext. signiture is the hmac
-						data = fromClient[:-SIG_SIZE]
-						signiture = fromClient[-SIG_SIZE:]
-
-						#If the authkey is wrong, this will return true and close the connection
-						if hmac.new(kTwo, data, hashlib.sha1).digest() != signiture:
-							print ("Message authentication failed")
-							conn.close()
-							sys.exit()
+						data = fromClient
 
 						#IV is the first 16 chars of the data string
 						iv = data[:16]
@@ -136,11 +119,8 @@ if (flag == "-s"):
 						encryptor = AES.new(kOne, mode, iv)
 						ciphertext = encryptor.encrypt(toClient)
 
-						#add inegrity by signing the message using HMAC and sha1
-						sign = hmac.new(kTwo, iv + ciphertext, hashlib.sha1).digest()
-
 						#send the IV, ciphertext, and signiture in a nice little package 
-						conn.send(iv + ciphertext + sign)
+						conn.send(iv + ciphertext)
 						#conn.send(iv)
 
 					except:
@@ -192,14 +172,7 @@ elif (flag == "-c"):
 
 				if fromServer:
 					#data = IV + ciphertext. signiture is the hmac
-					data = fromServer[:-SIG_SIZE]
-					signiture = fromServer[-SIG_SIZE:]
-
-					#If the authkey is wrong, this will return true and close the connection
-					if hmac.new(kTwo, data, hashlib.sha1).digest() != signiture:
-						print ("Message authentication failed")
-						sock.close()
-						sys.exit()
+					data = fromServer
 
 					#IV is the first 16 chars of the data string
 					iv = data[:16]
@@ -234,11 +207,9 @@ elif (flag == "-c"):
 				encryptor = AES.new(kOne, mode, iv)
 				ciphertext = encryptor.encrypt(toServer)
 				
-				#add inegrity by signing the message using HMAC and sha1
-				sign = hmac.new(kTwo, iv + ciphertext, hashlib.sha1).digest()
 
 				#send the whole packet
-				sock.send(iv + ciphertext + sign)
+				sock.send(iv + ciphertext)
 
 		
 
