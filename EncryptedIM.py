@@ -20,6 +20,11 @@ PORT = 1992
 SIG_SIZE = hashlib.sha1().digest_size
 mode = AES.MODE_CBC
 
+
+baseG = 5
+primeP = 0x00cc81ea8157352a9e9a318aac4e33ffba80fc8da3373fb44895109e4c3ff6cedcc55c02228fccbd551a504feb4346d2aef47053311ceaba95f6c540b967b9409e9f0502e598cfc71327c5a455e2e807bede1e0b7d23fbea054b951ca964eaecae7ba842ba1fc6818c453bf19eb9c5c86e723e69a210d4b72561cab97b3fb3060b
+
+
 total = len(sys.argv)
 
 #cancel everything if there are not exactly 3 arguments
