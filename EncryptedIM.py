@@ -8,7 +8,7 @@
 #			using Diffie-Hellman and messages are 	#
 # 			encrypted using AES-128. 				#
 #													#
-# input  : To run this program, two instances will  #
+# Input  : To run this program, two instances will  #
 #			need to be created, a server and a 		#
 #			client. The server should be started	#
 #			first by running 						#
@@ -17,6 +17,30 @@
 #			you will need the IP or hostname of		#
 # 			the server. To run, enter				#
 #				python EncryptedIM.py -c <hostIP>	#
+#													#
+# Note   : This may take a few seconds before the 	#
+#			key exchange is completed				#
+#													#
+# Explanation of the Diffie-Hellman Exchange :      #
+#		    In DH, the client and server both have  #
+#			hardcoded base (g) and prime (p) values #
+#			Server and client both generate random  #
+#			numbers that they keep secret (a and b, #
+#			respectively). Server and client then  	#
+#			compute A and B using					#
+#				X  =  g^(x) mod p 					#
+#			where X and x are either A and a, or B 	#
+#			and b, respectively. Server and client 	#
+#			recieves the others shared portion of   #
+# 			the key. So the server recieves B from  #
+#			the client, who recieves A from the     #
+#			server. To compute the shared secret	#
+#			key (s), both parties run 				#
+#				s  =  Y^(x) mod p  					#
+#			where Y is the value recieved from the 	#
+#			other party (A or B) and x is the  		#
+#			secret value known only to the  		#
+#			user (a or b). 							#
 #####################################################
 
 import sys
@@ -81,7 +105,7 @@ def computeKey(base, aORb):
 
 #generate a random number for the a and b values in the DH exchange
 def generateRandomHex():
-	return os.urandom(1).encode('hex')
+	return os.urandom(2).encode('hex')
 
 
 
@@ -116,10 +140,7 @@ if (flag == "-s"):
 
 	#compute secret key using A and B with p and g, then hashing and taking the first 128 bits
 	s = computeKey(int(B), a)
-	#print (s)
 	key = (hashlib.sha1(str(s)).digest())[:16]
-
-	print key
 
 	while True:
 		#figure out reading and writing
@@ -225,10 +246,7 @@ elif (flag == "-c"):
 
 	#compute secret key
 	s = computeKey(int(A), b)
-	print (s)
-
 	key = (hashlib.sha1(str(s)).digest())[:16]
-	print key
 
 	while True:
 		read, write, err = select.select(possible_sockets, [], [], 1)
