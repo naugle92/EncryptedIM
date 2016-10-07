@@ -8,14 +8,13 @@ import binascii
 import hmac
 import random
 from Crypto.Cipher import AES
-from Crypto.Hash import HMAC
 import base64
 import os
 
 
 
 HOST = ""
-PORT = 8889
+PORT = 9999
 
 SIG_SIZE = hashlib.sha1().digest_size
 mode = AES.MODE_CBC
@@ -44,19 +43,6 @@ parser.add_argument('-s', dest='server', action='store_true',
 
 args = parser.parse_args()
 
-kOne = "temptemptemptemp"
-kOne = (hashlib.sha1(kOne).digest())[:16]
-
-
-#def exponent(g, x):
-#	print g
-#	if x == 0:
-#		return 1
-#	elif x % 2 == 1:
-#		return g * exponent(g, x - 1)
-#	else:
-#		num = exponent(g, x / 2)
-#		return num * num
 
 def exponent(g, x):
     r = 1
@@ -70,6 +56,12 @@ def exponent(g, x):
 
     return r
 
+def computeKey(base, aORb):
+	AB = exponent(base, int(aORb, 16)) % int(primeP)
+	return AB 
+
+def generateRandomHex():
+	return os.urandom(2).encode('hex')
 
 #server
 if (flag == "-s"):
@@ -94,15 +86,13 @@ if (flag == "-s"):
 	B = conn.recv(4096).rstrip('\n')
 
 	#compute and send A
-	a = os.urandom(2).encode('hex')
-	print a
-	A = exponent(baseG, int(a, 16)) % int(primeP)
-
+	a = generateRandomHex()
+	A = computeKey(baseG, a)
 	conn.send(str(A) + '\n')
 
 
 	#compute shared key using A and B with p and g
-	s = exponent(int(B), int(a, 16)) % int(primeP)
+	s = computeKey(int(B), a)
 	print (s)
 
 	key = (hashlib.sha1(str(s)).digest())[:16]
@@ -204,16 +194,15 @@ elif (flag == "-c"):
 
 	#compute B and send B
 	#b should be a cryptographically random number
-	b = os.urandom(2).encode('hex')
-	print (b)
-	B = exponent(baseG, int(b, 16)) % int(primeP)
+	b = generateRandomHex()
+	B = computeKey(baseG, b)
 	sock.send(str(B) + '\n')
 
 	#receive A and remove newline
 	A = sock.recv(4096).rstrip('\n')
 
 	#compute secret key
-	s = exponent(int(A), int(b, 16)) % int(primeP)
+	s = computeKey(int(A), b)
 	print (s)
 
 	key = (hashlib.sha1(str(s)).digest())[:16]
