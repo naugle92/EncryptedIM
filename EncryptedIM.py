@@ -4,11 +4,8 @@ import select
 import string
 import argparse
 import hashlib
-import binascii
-import hmac
 import random
 from Crypto.Cipher import AES
-import base64
 import os
 
 
@@ -61,7 +58,7 @@ def computeKey(base, aORb):
 	return AB 
 
 def generateRandomHex():
-	return os.urandom(2).encode('hex')
+	return os.urandom(1).encode('hex')
 
 #server
 if (flag == "-s"):
