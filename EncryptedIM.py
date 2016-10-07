@@ -1,3 +1,24 @@
+#####################################################
+#				EncryptedIM.py 						#
+#####################################################
+# Author : Nicolas Naugle							#
+# Date   : 7 October 2016							#
+# Purpose: This Python program is an encrypted 		#
+#			instant messanger. Keys are exchanged	#
+#			using Diffie-Hellman and messages are 	#
+# 			encrypted using AES-128. 				#
+#													#
+# input  : To run this program, two instances will  #
+#			need to be created, a server and a 		#
+#			client. The server should be started	#
+#			first by running 						#
+#				python EncryptedIM.py -s 			#
+#		   The second instance is the client, and	#
+#			you will need the IP or hostname of		#
+# 			the server. To run, enter				#
+#				python EncryptedIM.py -c <hostIP>	#
+#####################################################
+
 import sys
 import socket
 import select
@@ -25,7 +46,7 @@ total = len(sys.argv)
 
 #cancel everything if there are not exactly 3 arguments
 if (total != 2) and (total != 3):
-	print("6 or 7 arguments needed. Should be 'python UnencryptedIM.py -s|-c <name>'")
+	print("2 or 3 arguments needed. Should be 'python UnencryptedIM.py -s|-c <host>'")
 	sys.exit()
 
 #flag determines if it is a server or client
@@ -40,7 +61,7 @@ parser.add_argument('-s', dest='server', action='store_true',
 
 args = parser.parse_args()
 
-
+#exponentiation by squaring technique
 def exponent(g, x):
     r = 1
     while 1:
@@ -53,12 +74,17 @@ def exponent(g, x):
 
     return r
 
+#compute the shared and secret parts of the keys
 def computeKey(base, aORb):
 	AB = exponent(base, int(aORb, 16)) % int(primeP)
 	return AB 
 
+#generate a random number for the a and b values in the DH exchange
 def generateRandomHex():
 	return os.urandom(1).encode('hex')
+
+
+
 
 #server
 if (flag == "-s"):
@@ -88,17 +114,14 @@ if (flag == "-s"):
 	conn.send(str(A) + '\n')
 
 
-	#compute shared key using A and B with p and g
+	#compute secret key using A and B with p and g, then hashing and taking the first 128 bits
 	s = computeKey(int(B), a)
-	print (s)
-
+	#print (s)
 	key = (hashlib.sha1(str(s)).digest())[:16]
 
 	print key
 
 	while True:
-
-
 		#figure out reading and writing
 		read, write, err = select.select(possible_sockets, [], [], 1)
 
@@ -163,6 +186,8 @@ if (flag == "-s"):
 
 	#close out of the connection
 	conn.close()
+
+
 
 
 
