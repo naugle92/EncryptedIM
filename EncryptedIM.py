@@ -18,8 +18,8 @@
 # 			the server. To run, enter				#
 #				python EncryptedIM.py -c <hostIP>	#
 #													#
-# Note   : This may take a few seconds before the 	#
-#			key exchange is completed				#
+# Note   : A 32 byte secret key was chosen because	#
+# 			of its speed and security 				#
 #													#
 # Explanation of the Diffie-Hellman Exchange :      #
 #		    In DH, the client and server both have  #
