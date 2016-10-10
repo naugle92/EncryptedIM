@@ -85,27 +85,16 @@ parser.add_argument('-s', dest='server', action='store_true',
 
 args = parser.parse_args()
 
-#exponentiation by squaring technique
-def exponent(g, x):
-    r = 1
-    while 1:
-        if x % 2 == 1:
-            r *= g
-        x /= 2
-        if x == 0:
-            break
-        g *= g
-
-    return r
 
 #compute the shared and secret parts of the keys
 def computeKey(base, aORb):
-	AB = exponent(base, int(aORb, 16)) % int(primeP)
+	#base^(aORb) mod primeP 
+	AB = pow(base, int(aORb, 16), int(primeP))
 	return AB 
 
 #generate a random number for the a and b values in the DH exchange
 def generateRandomHex():
-	return os.urandom(2).encode('hex')
+	return os.urandom(32).encode('hex')
 
 
 
